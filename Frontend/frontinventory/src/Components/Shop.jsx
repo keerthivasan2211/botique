@@ -14,7 +14,7 @@ const Shop = () => {
   useEffect(() => {
     setLoading(true);
     axios
-      .get("http://localhost:5000/api/products")
+      .get("https://botique-backend.onrender.com/api/products")
       .then((res) => {
         setProducts(res.data);
         setLoading(false);
