@@ -39,6 +39,10 @@ const CustomerDetails = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    console.log("Customer Details:", customer); // Log customer details
+    console.log("Cart Details:", cartDetails); // Log cart details
+
     if (!cartDetails.length) {
       alert("Cart is empty! Please add items before proceeding.");
       return;
@@ -47,8 +51,13 @@ const CustomerDetails = () => {
     if (validate()) {
       localStorage.setItem("customerDetails", JSON.stringify(customer));
       localStorage.setItem("cartDetails", JSON.stringify(cartDetails)); // Store cart too
-      navigate("/payment", { state: { customer: { name: "John", email: "john@example.com", phone: "1234567890" }, cartItems: [{ name: "Product A", quantity: 2 }] } });
 
+      navigate("/payment", { 
+        state: { 
+          customer, 
+          cartItems: cartDetails 
+        } 
+      });
     }
   };
 
@@ -59,48 +68,92 @@ const CustomerDetails = () => {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block font-semibold">Full Name</label>
-            <input type="text" name="name" value={customer.name} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+            <input 
+              type="text" 
+              name="name" 
+              value={customer.name} 
+              onChange={handleChange} 
+              className="w-full px-3 py-2 border rounded-lg" 
+            />
             {errors.name && <p className="text-red-600 text-sm">{errors.name}</p>}
           </div>
 
           <div className="mb-4">
             <label className="block font-semibold">Email</label>
-            <input type="email" name="email" value={customer.email} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+            <input 
+              type="email" 
+              name="email" 
+              value={customer.email} 
+              onChange={handleChange} 
+              className="w-full px-3 py-2 border rounded-lg" 
+            />
             {errors.email && <p className="text-red-600 text-sm">{errors.email}</p>}
           </div>
 
           <div className="mb-4">
             <label className="block font-semibold">Phone Number</label>
-            <input type="text" name="phone" value={customer.phone} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+            <input 
+              type="text" 
+              name="phone" 
+              value={customer.phone} 
+              onChange={handleChange} 
+              className="w-full px-3 py-2 border rounded-lg" 
+            />
             {errors.phone && <p className="text-red-600 text-sm">{errors.phone}</p>}
           </div>
 
           <div className="mb-4">
             <label className="block font-semibold">Address</label>
-            <textarea name="address" value={customer.address} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg"></textarea>
+            <textarea 
+              name="address" 
+              value={customer.address} 
+              onChange={handleChange} 
+              className="w-full px-3 py-2 border rounded-lg"
+            ></textarea>
             {errors.address && <p className="text-red-600 text-sm">{errors.address}</p>}
           </div>
 
           <div className="mb-4 flex space-x-2">
             <div className="w-1/2">
               <label className="block font-semibold">City</label>
-              <input type="text" name="city" value={customer.city} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+              <input 
+                type="text" 
+                name="city" 
+                value={customer.city} 
+                onChange={handleChange} 
+                className="w-full px-3 py-2 border rounded-lg" 
+              />
               {errors.city && <p className="text-red-600 text-sm">{errors.city}</p>}
             </div>
             <div className="w-1/2">
               <label className="block font-semibold">State</label>
-              <input type="text" name="state" value={customer.state} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+              <input 
+                type="text" 
+                name="state" 
+                value={customer.state} 
+                onChange={handleChange} 
+                className="w-full px-3 py-2 border rounded-lg" 
+              />
               {errors.state && <p className="text-red-600 text-sm">{errors.state}</p>}
             </div>
           </div>
 
           <div className="mb-4">
             <label className="block font-semibold">ZIP Code</label>
-            <input type="text" name="zip" value={customer.zip} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+            <input 
+              type="text" 
+              name="zip" 
+              value={customer.zip} 
+              onChange={handleChange} 
+              className="w-full px-3 py-2 border rounded-lg" 
+            />
             {errors.zip && <p className="text-red-600 text-sm">{errors.zip}</p>}
           </div>
 
-          <button type="submit" className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
+          <button 
+            type="submit" 
+            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+          >
             Proceed to Payment
           </button>
         </form>

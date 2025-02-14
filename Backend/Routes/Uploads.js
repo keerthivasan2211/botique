@@ -5,7 +5,10 @@ const path = require("path");
 const Product = require("../Models/Product");   
 const router = express.Router();
 const cloudinary = require("cloudinary").v2;
-const Order = require("../Models/Product");
+const OrderModel = require("../Models/Order");
+const mongoose = require("mongoose");
+
+
 
 
 
@@ -103,81 +106,55 @@ router.get("/images", async (req, res) => {
     //     }
     // });
 
-    router.post("/orders", async (req, res) => {
-      try {
-
-        const { name, email, phone, address, amount, items } = req.body;
-        console.log(name, email, phone, address, amount, items )
-        if (!name || !email || !phone || !address || !amount || !items.length) {
-          return res.status(400).json({ success: false, message: "All fields are required." });
-        }
-    
-        const newOrder = new Order({ name, email, phone, address, amount, items });
-        await newOrder.save();
-    
-        res.status(201).json({ success: true, orderId: newOrder._id });
-      } catch (error) {
-        console.error("Error placing order:", error);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
-      }
-    });
 
 
-    router.post("/signup", async (req, res) => {
-      try {
-        const { name, email, password } = req.body;
-        if (!name || !email || !password) return res.status(400).json({ error: "All fields are required" });
-    
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ name, email, password: hashedPassword });
-    
-        await newUser.save();
-        res.json({ message: "Signup successful!" });
-      } catch (error) {
-        res.status(400).json({ error: "Email already in use" });
-      }
+
+
+router.post("/orders", async (req, res) => {
+  console.log("Received Order Data:", req.body);
+
+  try {
+    const { orderId, customerName, customerEmail, customerPhone, shippingAddress, items, totalAmount, paymentStatus, orderStatus } = req.body;
+
+    if (!orderId || !customerName || !customerEmail || !customerPhone || !shippingAddress || !items || !totalAmount) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    // Convert productId to ObjectId
+    const updatedItems = items.map((item) => ({
+      ...item,
+      productId: Number(item.productId), // ✅ Ensure it's a number
+    }));
+
+    const newOrder = new OrderModel({
+      orderId,
+      customerName,
+      customerEmail,
+      customerPhone,
+      shippingAddress,
+      items: updatedItems, // ✅ Use updated items
+      totalAmount,
+      paymentStatus,
+      orderStatus,
     });
+
+    const savedOrder = await newOrder.save();
+    console.log("Order Saved:", savedOrder);
+    res.status(201).json({ message: "Order created successfully", order: savedOrder });
+
+  } catch (error) {
+    console.error("Error Saving Order:", error);
+    res.status(500).json({ message: "Order creation failed", error: error.message });
+  }
+});
+
+
     
-    router.post("/google-signup", (req, res) => {
-      const { name, email, uid } = req.body;
-      console.log("Google User:", { name, email, uid });
-      res.json({ message: "Google Sign-Up Successful" });
-    });
-    
-      
-    router.post("/api/update-stock", async (req, res) => {
-      console.log("wdcmoi")
-      try {
-        const { cartItems } = req.body;
-    
-        if (!Array.isArray(cartItems)) {
-          return res.status(400).json({ error: "Invalid data format. Expected an array of cart items." });
-        }
-    
-        for (let item of cartItems) {
-          const product = await Product.findOne({ productId: item.productId });
-    
-          if (!product) {
-            return res.status(404).json({ error: `Product ${item.productId} not found!` });
-          }
-    
-          if (product.quantity < item.quantity) {
-            return res.status(400).json({ error: `Insufficient stock for ${product.name}!` });
-          }
-    
-          await Product.updateOne(
-            { productId: item.productId },
-            { $inc: { quantity: -item.quantity } }
-          );
-        }
-    
-        res.status(200).json({ message: "Stock updated successfully!" });
-      } catch (error) {
-        console.error("Error updating stock:", error);
-        res.status(500).json({ error: "Failed to update stock" });
-      }
-    });
-    
+
+
+
+
+
 
     router.post("/send-message", async (req, res) => {
       const { chat_id, text } = req.body;

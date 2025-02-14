@@ -1,35 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FiShoppingCart } from "react-icons/fi";
 import { Menu, X } from "lucide-react";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Navbar = ({ cartCount }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const auth = getAuth();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [auth]);
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    setUser(null);
-  };
 
   return (
     <nav className="w-full fixed top-0 left-0 bg-white shadow-md p-4 flex justify-between items-center z-50 px-8">
       <h1 className="text-2xl font-bold text-gray-900">Suja_Boutique</h1>
 
-      <button className="md:hidden text-black transition-transform duration-300 transform hover:scale-110" onClick={() => setMenuOpen(!menuOpen)}>
+      <button
+        className="md:hidden text-black transition-transform duration-300 transform hover:scale-110"
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
         {menuOpen ? <X size={32} /> : <Menu size={32} />}
       </button>
 
@@ -54,40 +39,6 @@ const Navbar = ({ cartCount }) => {
             </motion.span>
           )}
         </Link>
-
-        {loading ? (
-          <span className="text-gray-500">Loading...</span>
-        ) : user ? (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.3 }}
-            className="flex items-center gap-4"
-          >
-            <img
-              src={user.photoURL || "https://via.placeholder.com/150"}
-              alt={user.displayName || "User"}
-              className="w-10 h-10 rounded-full border border-gray-300 shadow-sm"
-            />
-            <span className="text-gray-900 font-semibold">{user.displayName}</span>
-            <motion.button
-              onClick={handleLogout}
-              whileTap={{ scale: 0.9, opacity: 0.7 }}
-              className="bg-red-600 text-white px-6 py-2 rounded-lg text-lg hover:bg-red-700 transition duration-300 hover:scale-105"
-            >
-              Logout
-            </motion.button>
-          </motion.div>
-        ) : (
-          <motion.div className="flex gap-4">
-            <motion.div whileTap={{ scale: 0.9, opacity: 0.7 }}>
-              <Link to="/login" className="text-blue-500 font-semibold hover:text-blue-700 transition duration-300">Login</Link>
-            </motion.div>
-            <motion.div whileTap={{ scale: 0.9, opacity: 0.7 }}>
-              <Link to="/signup" className="text-green-500 font-semibold hover:text-green-700 transition duration-300">Sign Up</Link>
-            </motion.div>
-          </motion.div>
-        )}
       </div>
 
       <AnimatePresence>
@@ -109,34 +60,6 @@ const Navbar = ({ cartCount }) => {
                 Cart ({cartCount})
               </Link>
             </li>
-            {loading ? (
-              <li>Loading...</li>
-            ) : user ? (
-              <>
-                <li className="flex flex-col items-center">
-                  <img
-                    src={user.photoURL || "https://via.placeholder.com/150"}
-                    alt="User Profile"
-                    className="w-16 h-16 rounded-full border border-gray-300 mb-2"
-                  />
-                  <span className="text-gray-900 font-semibold">{user.displayName}</span>
-                </li>
-                <li>
-                  <motion.button
-                    onClick={handleLogout}
-                    whileTap={{ scale: 0.9, opacity: 0.7 }}
-                    className="bg-red-600 text-white px-6 py-2 rounded-lg text-lg hover:bg-red-700 transition duration-300 hover:scale-105"
-                  >
-                    Logout
-                  </motion.button>
-                </li>
-              </>
-            ) : (
-              <motion.div className="flex flex-col items-center gap-4">
-                <li><motion.div whileTap={{ scale: 0.9, opacity: 0.7 }}><Link to="/login" className="text-blue-500 font-semibold hover:text-blue-700 transition duration-300">Login</Link></motion.div></li>
-                <li><motion.div whileTap={{ scale: 0.9, opacity: 0.7 }}><Link to="/signup" className="text-green-500 font-semibold hover:text-green-700 transition duration-300">Sign Up</Link></motion.div></li>
-              </motion.div>
-            )}
           </motion.ul>
         )}
       </AnimatePresence>
@@ -145,7 +68,6 @@ const Navbar = ({ cartCount }) => {
 };
 
 export { Navbar };
-
 
 
 const Footer = ({ cartCount }) => {

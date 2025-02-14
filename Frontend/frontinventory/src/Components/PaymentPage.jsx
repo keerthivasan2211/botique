@@ -2,57 +2,68 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
 import { useState } from "react";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 
-const TELEGRAM_BOT_TOKEN = "7846765291:AAGI3l_rWHxns8GDUa7E4HEJOPntGhq7eU";
-const TELEGRAM_CHAT_ID = "1010637203";
+// UPI ID for Payment
+const UPI_ID = "keerthivasan903@okhdfcbank";
 
 const PaymentPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Set default customer details if not available
-  const customer = location.state?.customer || {
-    name: "Sivasri",
-    email: "siva@gmail.com",
-    phone: "9751907490",
-  };
 
-  // Set default cart details if cart is empty
-  const cartItems = location.state?.cartItems?.length
-    ? location.state.cartItems
-    : [{ name: "Sample Product", quantity: 1 }];
+  // Get customer details and cart items from route state
+  const { customer, cartItems } = location.state || {};
+
+  if (!customer || !cartItems || cartItems.length === 0) {
+    navigate("/");
+    return null;
+  }
+
+  // Calculate total amount
+  const totalAmount = cartItems.reduce((total, item) => total + item.quantity * item.price, 0);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const paymentURL = `https://your-payment-gateway.com/pay?name=${encodeURIComponent(
+  // Generate UPI Payment URL for Google Pay
+  const upiPaymentURL = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(
     customer.name
-  )}&email=${encodeURIComponent(customer.email)}&amount=100`;
+  )}&am=${totalAmount}&cu=INR&tn=Order%20Payment`;
 
+  // Function to handle order completion
   const handleCompleteOrder = async () => {
     setLoading(true);
     setMessage("");
 
     try {
-      const cartDetails = cartItems
-        .map((item) => `- ${item.name} (Qty: ${item.quantity})`)
-        .join("\n");
+      const orderData = {
+        orderId: uuidv4(), // Generate a unique order ID
+        customerName: customer.name,
+        customerEmail: customer.email,
+        customerPhone: customer.phone,
+        shippingAddress: `${customer.address}, ${customer.city}, ${customer.state} - ${customer.zip}`,
+        items: cartItems.map((item) => ({
+          productId: item.productId, // Ensure productId is available in cartItems
+          productName: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        totalAmount,
+        paymentStatus: "Pending",
+      };
 
-      const telegramMessage = `🛒 *New Order Received*:\n\n👤 *Customer*: ${customer.name}\n✉️ *Email*: ${customer.email}\n📞 *Phone*: ${customer.phone}\n🛍 *Cart Items*:\n${cartDetails}`;
+      // Send order data to backend
+      const response = await axios.post("http://localhost:5000/api/orders", orderData);
 
-      const telegramURL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-
-      await axios.post(telegramURL, {
-        chat_id: TELEGRAM_CHAT_ID,
-        text: telegramMessage,
-        parse_mode: "Markdown",
-      });
-
-      setMessage("✅ Order details sent to Telegram!");
-      setTimeout(() => navigate("/success"), 2000);
+      if (response.status === 201) {
+        setMessage("✅ Order placed successfully!");
+        setTimeout(() => navigate("/shop"), 2000);
+      } else {
+        throw new Error("Order creation failed");
+      }
     } catch (error) {
-      console.error("Error:", error);
-      setMessage("❌ Failed to send order details. Try again later.");
+      console.error("Order submission failed:", error);
+      setMessage("❌ Order submission failed. Try again later.");
     }
 
     setLoading(false);
@@ -63,42 +74,42 @@ const PaymentPage = () => {
       <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md text-center">
         <h1 className="text-2xl font-semibold mb-4">Payment Page</h1>
 
+        {/* Customer Details */}
         <div className="mb-6">
           <h2 className="text-lg font-medium">Customer Details</h2>
           <p><strong>Name:</strong> {customer.name}</p>
           <p><strong>Email:</strong> {customer.email}</p>
           <p><strong>Phone:</strong> {customer.phone}</p>
+          <p><strong>Address:</strong> {customer.address}, {customer.city}, {customer.state} - {customer.zip}</p>
         </div>
 
+        {/* Cart Items */}
         <div className="mb-6 text-left">
           <h2 className="text-lg font-medium">Cart Items</h2>
           <ul className="list-disc pl-5">
             {cartItems.map((item, index) => (
-              <li key={index}>{item.name} (Qty: {item.quantity})</li>
+              <li key={index}>{item.name} (Qty: {item.quantity}) - ₹{item.price * item.quantity}</li>
             ))}
           </ul>
+          <p className="font-semibold mt-3">Total: ₹{totalAmount}</p>
         </div>
 
+        {/* QR Code for UPI Payment */}
         <div className="flex flex-col items-center">
-          <p className="text-sm text-gray-600 mb-2">Scan the QR code to proceed with payment</p>
-          <QRCodeCanvas value={paymentURL} size={200} />
+          <p className="text-sm text-gray-600 mb-2">Scan the QR code to pay via Google Pay</p>
+          <QRCodeCanvas value={upiPaymentURL} size={200} />
         </div>
 
+        {/* Place Order Button */}
         <button
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
           onClick={handleCompleteOrder}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition mt-4"
           disabled={loading}
         >
-          {loading ? "Processing..." : "Complete Order"}
+          {loading ? "Placing Order..." : "Place Order"}
         </button>
 
-        {message && <p className="mt-4 text-red-500">{message}</p>}
-
-        <p className="mt-4 text-blue-500">
-          <a href={paymentURL} target="_blank" rel="noopener noreferrer">
-            Click here if QR code is not working
-          </a>
-        </p>
+        {message && <p className="text-center mt-4 text-sm text-gray-700">{message}</p>}
       </div>
     </div>
   );
