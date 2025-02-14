@@ -49,7 +49,7 @@ const Signup = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const newUser = userCredential.user;
 
-      await axios.post("http://localhost:5000/api/signup", {
+      await axios.post("https://botique-backend.onrender.com/api/signup", {
         name: formData.name,
         email: newUser.email,
       });
@@ -65,7 +65,7 @@ const Signup = () => {
       const result = await signInWithPopup(auth, provider);
       const googleUser = result.user;
 
-      await axios.post("http://localhost:5000/api/google-signup", {
+      await axios.post("https://botique-backend.onrender.com/google-signup", {
         name: googleUser.displayName,
         email: googleUser.email,
         uid: googleUser.uid,
