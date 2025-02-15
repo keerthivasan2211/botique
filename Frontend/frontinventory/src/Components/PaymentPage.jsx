@@ -7,6 +7,10 @@ import { v4 as uuidv4 } from "uuid";
 // UPI ID for Payment
 const UPI_ID = "keerthivasan903@okhdfcbank";
 
+// Telegram Bot Credentials (Replace with your own)
+const TELEGRAM_BOT_TOKEN = "7846765291:AAGdI3l_rWHxns8GDUa7E4HEJOPntGhq7eU";
+const TELEGRAM_CHAT_ID = "1010637203";
+
 const PaymentPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,6 +33,35 @@ const PaymentPage = () => {
   const upiPaymentURL = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(
     customer.name
   )}&am=${totalAmount}&cu=INR&tn=Order%20Payment`;
+
+  // Function to send order details to Telegram
+  const sendTelegramMessage = async (orderData) => {
+    const orderMessage = `
+🛒 *New Order Placed* 🛒
+
+🆔 *Order ID:* ${orderData.orderId}
+👤 *Customer:* ${orderData.customerName}
+📧 *Email:* ${orderData.customerEmail}
+📞 *Phone:* ${orderData.customerPhone}
+📍 *Address:* ${orderData.shippingAddress}
+
+🛍 *Items Ordered:*
+${orderData.items.map(item => `- ${item.productName} (x${item.quantity}) - ₹${item.price * item.quantity}`).join("\n")}
+
+💰 *Total Amount:* ₹${orderData.totalAmount}
+💳 *Payment Status:* ${orderData.paymentStatus}
+    `;
+
+    try {
+      await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: orderMessage,
+        parse_mode: "Markdown",
+      });
+    } catch (error) {
+      console.error("Failed to send Telegram message:", error);
+    }
+  };
 
   // Function to handle order completion
   const handleCompleteOrder = async () => {
@@ -53,10 +86,14 @@ const PaymentPage = () => {
       };
 
       // Send order data to backend
-      const response = await axios.post("http://localhost:5000/api/orders", orderData);
+      const response = await axios.post("https://botique-backend.onrender.com/api/orders", orderData);
 
       if (response.status === 201) {
         setMessage("✅ Order placed successfully!");
+
+        // Send order details to Telegram
+        await sendTelegramMessage(orderData);
+
         setTimeout(() => navigate("/shop"), 2000);
       } else {
         throw new Error("Order creation failed");
