@@ -9,7 +9,7 @@ const UPI_ID = "keerthivasan903@okhdfcbank";
 
 // Telegram Bot Credentials (Replace with your own)
 const TELEGRAM_BOT_TOKEN = "7846765291:AAGdI3l_rWHxns8GDUa7E4HEJOPntGhq7eU";
-const TELEGRAM_CHAT_ID = "1187234186";
+const TELEGRAM_CHAT_ID = "1010637203";
 
 const PaymentPage = () => {
   const location = useLocation();
